@@ -63,20 +63,3 @@ Letter.prototype.getNodes = function() {
   if(this.nodes[6] != -1) {this.nodes[6] = arrayOfLetters[row + 1][col]};
   if(this.nodes[7] != -1) {this.nodes[7] = arrayOfLetters[row + 1][col + 1]};
 }
-
-// Saves only a particular node of a letter
-// Returns the node that was in the input
-Letter.prototype.getOneNode = function(direction) {
-  var row = this.pos[0];
-  var col = this.pos[1];
-  if      (direction == 0)  {this.nodes[direction] = arrayOfLetters[row - 1][col - 1];}
-  else if (direction == 1)  {this.nodes[direction] = arrayOfLetters[row - 1][col];}
-  else if (direction == 2)  {this.nodes[direction] = arrayOfLetters[row - 1][col + 1];}
-  else if (direction == 3)  {this.nodes[direction] = arrayOfLetters[row][col - 1];}
-  else if (direction == 4)  {this.nodes[direction] = arrayOfLetters[row][col + 1];}
-  else if (direction == 5)  {this.nodes[direction] = arrayOfLetters[row + 1][col - 1];}
-  else if (direction == 6)  {this.nodes[direction] = arrayOfLetters[row + 1][col];}
-  else if (direction == 7)  {this.nodes[direction] = arrayOfLetters[row + 1][col + 1];}
-
-  return this.nodes[direction]
-}

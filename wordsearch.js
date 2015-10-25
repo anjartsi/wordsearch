@@ -5,7 +5,7 @@ This file uses the Letter object defined in letter.js
 *************************************************/
 
 //problem size
-var prbSize = 25;
+var prbSize = 7;
 var fontSize = 25; // Need a better name for this variable
 
 var wordsearch = document.getElementById('wordsearch');
@@ -23,10 +23,10 @@ for(var i=0; i<prbSize; i++) {
 }
 
 // List of words to search for, all upper case
-var wordList = ["hello","world", "bee"];
-for(var i = 0, l = wordList.length; i < l; i++) {
-  wordList[i]=wordList[i].toUpperCase();
-}
+// wordList starts out as a string but is converted to an array
+var wordList = "hello name armen";
+wordList = wordList.toUpperCase();
+wordList = wordList.split(' ');
 
 // All the letters that make up the words
 var charList = [];
@@ -79,67 +79,42 @@ var noderama = function() {
 }
 noderama();
 
-// This function probably does not need to exist
-// Highlights all the instances of the first letter of each word in wordList
-// Optional input: wordNum, if you only want to highlight the first letter of a single word
-var help = function(wordNum) {
-  clearHighlight();
-  // for each element in firstChar
-  for (var i = 0, l = firstChar.length; i<l; i++) {
-    // highlight all the firstChar elements
-    if(wordNum == null) {
-      highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);
-    }
 
-    // Highligh only specific firstChar elements that belong to the correct word in wordList
-    else {
-      for(var k = 0, ll = firstChar[i][1].length; k < ll; k++) {
-        if (firstChar[i][1][k] == wordNum) {
-          highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);      
+/***********************************************************
+Inserts a specific word into the wordsearch
+DirectionX can be -1 (left), 0 (vertical) or 1 (right)
+DirectionY can be -1 (up), 0 (horizontal) or 1 (down)
+DirectionX and DirectionY should not bot be zero
+Checks to see if the words fits, returns false if the word doesn't fit
+***********************************************************/ 
+var insertWord = function(row, col, word, directionY, directionX) {
+  // If the word doesn't fit horizontally
+  if(directionX * word.length + col > prbSize || directionX * word.length + col + 1 < 0) {
+    return false;
+  }
+  // If the word doesn't fit vertically
+  else if(directionY * word.length + row > prbSize || directionY * word.length + row + 1 < 0) {
+    return false;
+  }
+
+  // If the word fits, insert it
+  else {
+    for(var i = 0, l = word.length; i < l; i++) {
+      var current = arrayOfLetters[row + i * directionY][col + i * directionX];
+      current.cont = word[i].toUpperCase();
+
+      // If any of these letters belong in firstChar, add them there.
+      for(var j = 0, ll = wordList.length; j < ll; j++) {
+        if(current.cont == wordList[j][0]) {
+          firstChar.push([current,j]);
+          current.getNodes();
         }
       }
     }
-
+    printArray();
+    fixFirstCharArray(); 
+    return true;
   }
-}
-
-
-// Draw the arrayOfLetters onto the canvas
-var printArray = function() {
-  for (var i = 0; i < prbSize; i++) {
-    for (var j = 0; j < prbSize; j++) {
-      ctx.save();
-      ctx.translate(fontSize*j,fontSize*i);
-      ctx.fillStyle='white';
-      ctx.fillRect(0,0,fontSize,fontSize);
-      ctx.fillStyle='black';
-      ctx.fillText(arrayOfLetters[i][j].cont,fontSize/2,fontSize/2);
-      ctx.restore();
-    };
-  };
-}
-printArray();
-
-// Inserts a specific word into the wordsearch
-// DirectionX can be -1 (left), 0 (vertical) or 1 (right)
-// DirectionY can be -1 (up), 0 (horizontal) or 1 (down)
-// DirectionX and DirectionY should not bot be zero
-// Does NOT check to see if the words fits.... maybe I should add that feature??
-var insertWord = function(row, col, word, directionY, directionX) {
-  for(var i = 0, l = word.length; i < l; i++) {
-    var current = arrayOfLetters[row + i * directionY][col + i * directionX];
-    current.cont = word[i].toUpperCase();
-
-    // If any of these letters belong in firstChar, add them there.
-    for(var j = 0, ll = wordList.length; j < ll; j++) {
-      if(current.cont == wordList[j][0]) {
-        firstChar.push([current,j]);
-        current.getNodes();
-      }
-    }
-  }
-  printArray();
-  fixFirstCharArray();
 }
 
 // Removes extra elements from firstChar. 
@@ -163,11 +138,57 @@ var fixFirstCharArray = function() {
       elementsToRemove.push(i);
     }
   }
-  console.log(elementsToRemove);
   for(var i = 0, l = elementsToRemove.length; i < l; i++) {
     firstChar.splice(elementsToRemove[i],1);
   }
 }
 
-insertWord(0,0,"hello",0,1);
-insertWord(1,0,"world",1,1);
+/*******************************
+Looks through each element in firstChar to see if it forms the word in the input
+Returns the number of solutions found
+*******************************/
+var searchForSolutions = function(wordToMatch) {
+  var matchExists = 0;
+  var first = wordToMatch[0].toUpperCase();
+  for(var i = 0, l = firstChar.length; i < l; i++) {
+    // If the first letter of this word is found in firstChar
+    var currentFirstChar = firstChar[i][0]
+
+    if (first == currentFirstChar.cont) {
+      // For each node of the firstChar element
+      for(var j = 0, ll = currentFirstChar.nodes.length; j < ll; j++) {
+        if(lookAtNode(currentFirstChar, wordToMatch.substring(1), j)) {
+          matchExists++;
+        }
+      }
+    }
+
+  }
+  return matchExists;
+}
+
+/*******************************
+Inputs: a letter object
+        a word that is being searched
+        a direction, as an index of Letter.nodes array
+This function will check ONE node of the given letter to see if it matches 
+the FIRST letter of wordToMatch. 
+If true, it will call itself on the next node (in the same direction) with the 
+next letter of wordToWatch
+
+If all letters match, this function returns true
+*******************************/ 
+var lookAtNode = function(letter, wordToMatch, nodeDirection) {
+  // If wordToMatch is empty, this means all the letters already match.
+  if(wordToMatch.length == 0) {return true;}
+
+  // If the node in that direction does not match the next letter in the word
+  if(letter.nodes[nodeDirection].cont != wordToMatch[0]){
+    return false;
+  }
+
+  else {
+    letter.nodes[nodeDirection].getNodes();
+    return lookAtNode(letter.nodes[nodeDirection], wordToMatch.substring(1), nodeDirection);
+  }
+}

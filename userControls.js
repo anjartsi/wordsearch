@@ -36,7 +36,7 @@ var wsMouseMove = function(e) {
     clearHighlight(true); 
    
     // move horizontally
-    if(Math.abs(row - origRow)<2 && col != origCol) {
+    if(Math.abs(row - origRow) < 2 && col != origCol) {
       // right
       if(col > origCol) {
         for(var i = 0 ;i < col - origCol; i++) {
@@ -163,7 +163,34 @@ var checkMatch = function() {
   for(var i = 0, l = wordList.length; i < l; i++) {
     // If a match is found
     if(wordList[i] == highlightedWord || wordList[i] == reverseWord) {
-      addClass(document.getElementById('word_'+i),'wordListFound')
+      if(document.getElementById("word_"+i).innerHTML.indexOf("&times" == -1)) {
+        addClass(document.getElementById('word_'+i),'wordListFound')
+      }
     }
+  }
+}
+
+// This function probably does not need to exist
+// Highlights all the instances of the first letter of each word in wordList
+// Optional input: wordNum, if you only want to highlight the first letter of a single word
+var help = function(wordNum) {
+  clearHighlight();
+  // for each element in firstChar
+  for (var i = 0, l = firstChar.length; i<l; i++) {
+    
+    // highlight all the firstChar elements
+    if(wordNum == null) {
+      highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);
+    }
+
+    // Highligh only specific firstChar elements that belong to the correct word in wordList
+    else {
+      for(var k = 0, ll = firstChar[i][1].length; k < ll; k++) {
+        if (firstChar[i][1][k] == wordNum) {
+          highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);      
+        }
+      }
+    }
+
   }
 }
