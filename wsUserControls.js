@@ -20,10 +20,58 @@ var wsMouseDown = function(e) {
   start = [row,col];
 }
 
+// Checks if the current highlighted word is a match. 
+// If it is indeed a match, makes appropriate changes
 var wsMouseUp = function(e) {
   clicking = false;
+  var matchNo = checkMatch();
+  var wordListElem = '';
+  var numSolElem = -1;
+  var numSolutions = 0;
+  var cheaterCounter = 0;
+  // If the word is a match
+  if(matchNo != -1) {
+    // Highlight in the array
+    for (var i = 0, l = listHighlighted.length; i < l; i++) {
+      // cheaterCounter is a way to avoid highlighting the same solution
+      // multiple times to cross out the word from wordList
+      // Possible problem: if all the letters are highlighed from other sources, 
+      // the cheaterCounter will prevent the word from being counted
+      if(listHighlighted[i].bcolor != 'white') {cheaterCounter++;}
+      listHighlighted[i].bcolor = '#dd1';
+      // The letter clicked on is a slightly darker shade
+      if(i == 0) {listHighlighted[i].bcolor = '#db1';}
+    }
+
+    // Only wordList entries that have multiple solutions have numSol_i divs in them
+    wordListElem = document.getElementById("word_" + matchNo)
+    numSolElem = document.getElementById("numSol_" + matchNo);
+    if(numSolElem) {
+      // Take the string inside numSolElem, turn it into an INT, and decrement it
+      numSolutions = parseInt(numSolElem.innerHTML,10);
+      if (cheaterCounter != wordList[matchNo].length) {
+        numSolutions--;
+    }
+      // If there are still solutions, then make it yellow, but don't cross it out
+      if(numSolutions != 0) {
+        addClass(wordListElem,'changedNum');
+      }
+      
+      // If all the solutions are found, we can make it red and cross it out
+      else {
+        addClass(wordListElem,'wordListFound');
+        removeClass(wordListElem,'changedNum'); 
+      }
+      numSolElem.innerHTML=numSolutions;
+    }
+    // If it doesn't have a numSolElem, then there's only 1 solution, and we can 
+    // cross it out in red
+    else {
+      addClass(document.getElementById('word_' + matchNo),'wordListFound')
+    }
+  }
+  // Clear the start array for next mouseDown event
   start = [null,null];
-  checkMatch();
 }
 
 var wsMouseMove = function(e) {
@@ -120,7 +168,7 @@ var highlight = function(row, col, color) {
 var unhighlight = function(row, col) {
   ctx.save();
   ctx.translate(fontSize*col,fontSize*row);
-  ctx.fillStyle="white";
+  ctx.fillStyle=arrayOfLetters[row][col].bcolor;
   ctx.fillRect(0,0,fontSize,fontSize);
   ctx.fillStyle='black';
   ctx.fillText(arrayOfLetters[row][col].cont,fontSize/2,fontSize/2)
@@ -151,6 +199,9 @@ wordsearch.addEventListener('mousedown',wsMouseDown);
 wordsearch.addEventListener('mouseup',wsMouseUp);
 wordsearch.addEventListener('mousemove',wsMouseMove);
 
+// Takes the letters from listHighlighted, and checks to see if
+// It matches any of the words from wordList
+// Returns -1 if no match was found, otherwise returns the index of wordList
 var checkMatch = function() {
   // Get a string from listHighlighted
   var highlightedWord = "";
@@ -162,13 +213,11 @@ var checkMatch = function() {
   // Check for matches from wordList
   for(var i = 0, l = wordList.length; i < l; i++) {
     // If a match is found
-    if(wordList[i] == highlightedWord || wordList[i] == reverseWord) {
-      if(document.getElementById("word_"+i).innerHTML.indexOf("&times" == -1)) {
-        addClass(document.getElementById('word_'+i),'wordListFound')
-      }
-    }
+    if(wordList[i] == highlightedWord || wordList[i] == reverseWord) {return i;} 
   }
+  return -1;
 }
+
 
 // This function probably does not need to exist
 // Highlights all the instances of the first letter of each word in wordList
@@ -180,15 +229,13 @@ var help = function(wordNum) {
     
     // highlight all the firstChar elements
     if(wordNum == null) {
-      highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);
+      highlight(firstChar[i].pos[0],firstChar[i].pos[1]);
     }
 
     // Highligh only specific firstChar elements that belong to the correct word in wordList
     else {
-      for(var k = 0, ll = firstChar[i][1].length; k < ll; k++) {
-        if (firstChar[i][1][k] == wordNum) {
-          highlight(firstChar[i][0].pos[0],firstChar[i][0].pos[1]);      
-        }
+      if (firstChar[i].cont == wordList[wordNum][0]) {
+        highlight(firstChar[i].pos[0],firstChar[i].pos[1]);      
       }
     }
 

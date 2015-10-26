@@ -4,39 +4,22 @@ Initialize the word search
 This file uses the Letter object defined in letter.js
 *************************************************/
 
-//problem size
-var prbSize = 7;
-var fontSize = 25; // Need a better name for this variable
-
+// canvas stuff
 var wordsearch = document.getElementById('wordsearch');
-wordsearch.height=prbSize*fontSize;
-wordsearch.width=prbSize*fontSize;
+wordsearch.height = prbSize * fontSize;
+wordsearch.width = prbSize * fontSize;
 var ctx = wordsearch.getContext('2d');
-ctx.textAlign='center';
-ctx.font= fontSize*0.8+'px cambria';
-ctx.textBaseline='middle';
+ctx.textAlign = 'center';
+ctx.font = fontSize * 0.8 + 'px cambria';
+ctx.textBaseline = 'middle';
 
 // arrayOfLetters is a 2D (square) array, containing Letter objects
 var arrayOfLetters = new Array(prbSize);
-for(var i=0; i<prbSize; i++) {
+for(var i = 0; i < prbSize; i++) {
   arrayOfLetters[i] = new Array(prbSize);
 }
 
-// List of words to search for, all upper case
-// wordList starts out as a string but is converted to an array
-var wordList = "hello name armen";
-wordList = wordList.toUpperCase();
-wordList = wordList.split(' ');
 
-// All the letters that make up the words
-var charList = [];
-for(var i = 0,l = wordList.length; i < l; i++) {
-  for(var j=0,ll = wordList[i].length; j<ll; j++) {
-    if (charList.indexOf(wordList[i][j]) < 0) {
-      charList.push(wordList[i][j]);
-    }
-  }
-}
 
 // Array containing the locations of the first letter of each word in the list
 var firstChar = []
@@ -56,16 +39,14 @@ for (var i = 0; i < prbSize; i++) {
     is the first letter of. 
     ***********************************************************/
     var isFirstChar = false;
-    var belongsTo = []
     // If a letter is the first letter of any word
     for(var k = 0, l = wordList.length; k < l; k++) {
       if(randomLetter == wordList[k][0]) {
         isFirstChar = true;
-        belongsTo.push(k);
       }
     }
 
-    if(isFirstChar) {firstChar.push([arrayOfLetters[i][j],belongsTo]);}
+    if(isFirstChar) {firstChar.push(arrayOfLetters[i][j]);}
   };
 };
 
@@ -74,7 +55,7 @@ for (var i = 0; i < prbSize; i++) {
 // Get nodes of all letters in firstChar
 var noderama = function() {
   for(var i = 0, l = firstChar.length; i < l; i++) {
-    firstChar[i][0].getNodes();
+    firstChar[i].getNodes();
   }  
 }
 noderama();
@@ -106,13 +87,13 @@ var insertWord = function(row, col, word, directionY, directionX) {
       // If any of these letters belong in firstChar, add them there.
       for(var j = 0, ll = wordList.length; j < ll; j++) {
         if(current.cont == wordList[j][0]) {
-          firstChar.push([current,j]);
+          firstChar.push(current);
+          // The above line is creating duplicates in firstChar
           current.getNodes();
         }
       }
     }
     printArray();
-    fixFirstCharArray(); 
     return true;
   }
 }
@@ -120,26 +101,74 @@ var insertWord = function(row, col, word, directionY, directionX) {
 // Removes extra elements from firstChar. 
 // This is necessary after altering arrayOfLetters
 // No need to call this function, it is already called automatically.
-var fixFirstCharArray = function() {
-  var elementsToRemove = []
+var removeExtrasFromFirstChar = function() {
+  var elementsToRemove = [];
   // For each element in firstChar
   for(var i = 0, l = firstChar.length; i < l; i++) {
     var match = false;
 
     // Look for matches in wordList
     for(var k = 0, ll = wordList.length; k < ll; k++) {
-      if (firstChar[i][0].cont == wordList[k][0]) {
+      if (firstChar[i].cont == wordList[k][0]) {
         match = true;
       }
     }
-
     // If no matches were found: 
     if(!match) {
       elementsToRemove.push(i);
     }
   }
+
+  // Remove all the elements that had no matches
   for(var i = 0, l = elementsToRemove.length; i < l; i++) {
-    firstChar.splice(elementsToRemove[i],1);
+    firstChar.splice(elementsToRemove[l-i-1],1);
+  }
+}
+
+var removeDuplicatesFromFirstChar = function() {
+  // List containing all the duplicate elements of firstChar
+  // This list itself has each set of duplicates twice
+  var listOfDups = []
+  // Element that may or may not get spliced
+  var hotChair;
+  // Element being compared to hotChair
+  var comp;
+  for (var i = 0, l = firstChar.length; i < l; i++) {
+    for(var j = 0; j < firstChar.length; j++) {
+      hotChair = firstChar[i];
+      comp = firstChar[j];
+      // If the two elements have the same rwo and col, and the same cont
+      if(i != j && hotChair.pos[0] == comp.pos[0] && hotChair.pos[1] == comp.pos[1]) {
+        if(hotChair.cont == comp.cont) {
+          // Save the two indeces
+          listOfDups.push([i,j].sort());
+        }
+      }
+    }
+  }
+  // At this point list of dups has all the repeat instances... TIMES TWO
+  for(var i = 0, l = listOfDups.length; i < l; i++) {
+    listOfDups[i].splice(0,1);
+    // Only keep the 2nd instance of the repeat
+  }
+  // Merge listOfDups from arrays of length 1 into 1 array
+  listOfDups = listOfDups.reduce(function(a,b) {
+    return a.concat(b)
+  });
+
+  listOfDups.sort();
+  
+  // Remove any duplicates from listOfDups
+  for(var i = 1, l = listOfDups.length; i < l; i++) {
+    if(listOfDups[i]==listOfDups[i-1]) {
+      listOfDups.splice(i, 1);
+    } 
+  }
+
+  // Splice all the repeat offenders, beginning from the back
+  listOfDups.reverse();
+  for (var i = 0; i< listOfDups.length; i++) {
+    firstChar.splice(listOfDups[i],1);
   }
 }
 
@@ -147,25 +176,33 @@ var fixFirstCharArray = function() {
 Looks through each element in firstChar to see if it forms the word in the input
 Returns the number of solutions found
 *******************************/
-var searchForSolutions = function(wordToMatch) {
-  var matchExists = 0;
-  var first = wordToMatch[0].toUpperCase();
+var searchForSolutions = function(wordToMatch, locationBool) {
+  wordToMatch = wordToMatch.toUpperCase();
+  var locations = [];
+  var countMatches = 0;
+  var first = wordToMatch[0];
+  // For each element in firstChar
   for(var i = 0, l = firstChar.length; i < l; i++) {
     // If the first letter of this word is found in firstChar
-    var currentFirstChar = firstChar[i][0]
-
-    if (first == currentFirstChar.cont) {
+    if (first == firstChar[i].cont) {
       // For each node of the firstChar element
-      for(var j = 0, ll = currentFirstChar.nodes.length; j < ll; j++) {
-        if(lookAtNode(currentFirstChar, wordToMatch.substring(1), j)) {
-          matchExists++;
+      for(var j = 0, ll = firstChar[i].nodes.length; j < ll; j++) {
+        // Look at node j of the firstChar element
+        // and match it with the remaining parts of wordToMatch
+        if(lookAtNode(firstChar[i], wordToMatch.substring(1), j)) {
+          countMatches++;
+          if(locationBool) {locations.push([firstChar[i].pos[0],firstChar[i].pos[1]]);}
         }
       }
     }
 
   }
-  return matchExists;
+  if(locationBool) {return locations}
+  else {
+    return countMatches;
+  }
 }
+
 
 /*******************************
 Inputs: a letter object

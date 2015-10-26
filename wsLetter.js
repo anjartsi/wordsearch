@@ -13,6 +13,7 @@ var Letter = function(character,row,col) {
   this.nodes = new Array(8);
   this.htmlId= (100*i+j);
   this.isHigh = false;
+  this.bcolor = 'white';
   /******* this.nodes ***********
   this.nodes is an array containing the surrounding letters of each 
   letter object. the placement looks like the following:

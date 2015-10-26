@@ -20,7 +20,7 @@ var printArray = function() {
     for (var j = 0; j < prbSize; j++) {
       ctx.save();
       ctx.translate(fontSize*j,fontSize*i);
-      ctx.fillStyle='white';
+      ctx.fillStyle=arrayOfLetters[i][j].bcolor;
       ctx.fillRect(0,0,fontSize,fontSize);
       ctx.fillStyle='black';
       ctx.fillText(arrayOfLetters[i][j].cont,fontSize/2,fontSize/2);
@@ -56,24 +56,31 @@ var insertRandom = function(word) {
 // overwrites one solution with another.
 var fairGame = function() {
   var anyChanges = false;
-  // Number of solutions found
-  var numSols = 0;
   for (var i = 0, l = wordList.length; i < l; i++) {
-    numSols = searchForSolutions(wordList[i])
-    if(numSols == 0) {
+    // If no solutions are found, make a random one
+    if(searchForSolutions(wordList[i],false) == 0) {
       insertRandom(wordList[i]);
       anyChanges = true;
     }
-    else if(numSols > 1) {
-      document.getElementById('word_'+i).innerHTML = wordList[i]+"<div>(&times"+numSols+")</div>";
-    }
   }
+
   if(anyChanges) {
     fairGame();
   }
   else {
-    fixFirstCharArray();
+    removeDuplicatesFromFirstChar();
+
   }
 }
-
 fairGame();
+
+var multiples = function() {
+  var numSols = 0;
+  for (var i = 0, l = wordList.length; i < l; i++) {
+    numSols = searchForSolutions(wordList[i],false)
+    if(numSols > 1) {
+      document.getElementById('word_'+i).innerHTML+="(&times<div id='numSol_"+i+"'>"+numSols+"</div>)"
+    }
+  }
+}    
+multiples();

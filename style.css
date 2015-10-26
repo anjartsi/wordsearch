@@ -34,14 +34,16 @@ html {
 
 .wordListFound {
 	text-decoration: line-through;
-	color: red;
+	color: #d44;
 }
 
 .wordListCont ul li div {
 	text-decoration: none;
-	color:white;
 	font-size: 18px;
 	display: inline-block;
 	vertical-align: top;
-	margin-left: 4px;
+}
+
+.changedNum {
+	color: #ff3;
 }
