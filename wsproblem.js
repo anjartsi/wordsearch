@@ -8,7 +8,7 @@ var fontSize = 25; // Need a better name for this variable
 // wordList
 // List of words to search for, all upper case
 // wordList starts out as a string but is converted to an array
-var wordList = "hello world foo bar lorem ipsum armen ourfalian";
+var wordList = "hello world foo bar lorem ipsum armen";
 wordList = wordList.toUpperCase();
 wordList = wordList.split(' ');
 

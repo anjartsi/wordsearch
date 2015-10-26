@@ -47,6 +47,7 @@ var insertRandom = function(word) {
   var ins = insertWord(row, col, word, dirX, dirY);
   if(!ins) {
     insertRandom(word);
+    removeDuplicatesFromFirstChar();
   }
 }
 
@@ -68,13 +69,12 @@ var fairGame = function() {
     fairGame();
   }
   else {
-    removeDuplicatesFromFirstChar();
 
   }
 }
 fairGame();
-
 var multiples = function() {
+  removeDuplicatesFromFirstChar();
   var numSols = 0;
   for (var i = 0, l = wordList.length; i < l; i++) {
     numSols = searchForSolutions(wordList[i],false)

@@ -152,9 +152,11 @@ var removeDuplicatesFromFirstChar = function() {
     // Only keep the 2nd instance of the repeat
   }
   // Merge listOfDups from arrays of length 1 into 1 array
-  listOfDups = listOfDups.reduce(function(a,b) {
-    return a.concat(b)
-  });
+  if(listOfDups.length>0) {
+    listOfDups = listOfDups.reduce(function(a,b) {
+      return a.concat(b)
+    });
+  }
 
   listOfDups.sort();
   
